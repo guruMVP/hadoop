@@ -1,0 +1,169 @@
+ Author   : Gurunadha Bottu
+ Created  : 11-Dec-2018
+ Updated : 11-Jan-2019
+ Release  : 1.0.0
+ Purpose  : Hadoop distributed Installation steps in Ubuntu
+ History   : N/A
+
+In this tutorial I am going to guide you through setting up hadoop environment on Ubuntu.
+
+Do the following as admin(root) user(sudo)
+
+1)Update OS
+command : sudo apt update
+Then it asks for admin password,provide it
+
+2)Update ssh
+command : sudo apt install ssh
+
+ssh-keygen is a standard component of the Secure Shell (SSH) protocol used to establish secure shell sessions 
+between remote computers over insecure networks.
+3)Generate key
+command :  ssh-keygen
+
+4)Append generated keys(use cat)
+command : cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+
+5)Modify "/etc/ssh/ssh_config"
+command : sudo gedit /etc/ssh/ssh_config
+
+6) In the above config file,  check for "#StrictHostkeyChecking YES or ask" and replace YES or ask with "no" or "NO"
+ex : StrictHostkeyChecking NO
+Note : remove # before "StrictHostkeyChecking" 
+
+7)Check ssh login
+ command :  ssh localhost
+
+8)Logout from ssh
+command :  logout
+
+9)Install java8
+command : sudo apt install openjdk-8-jdk
+Note : JAVA_HOME: /usr/lib/jvm/Java-8-openjdk-amd64
+
+10)Download hadoop s/w from the link "https://hadoop.apache.org" using any browser
+   then hadoop(hadoop-3.1.1.tar.gz) s/w will be downloaded in ubuntu's "Downloads" folder.
+
+11)Goto Downloads folder in ubuntu and extract the file using tar command
+command :  tar -zxvf hadoop-3.1.1.tar.gz
+Note : After above command "hadoop-3.1.1" folder will be created in Downloads folder.
+
+12)create Hadoop Home Directory (It is not mandatory to use hadoop3, any name will do)
+command : sudo mkdir /usr/lib/hadoop3
+
+13)change ownership of Hadoop Home Directory
+sudo chown <username> /usr/lib/hadoop3
+Note1: Replace username with current ubuntu's username)
+Note2: To know current ubuntu username type "whoami" in terminal
+command : sudo chown gvp-87 /usr/lib/hadoop3
+
+14)Move contents of extracted directory(Downloads\hadoop-3.1.1) to Hadoop Home Directory(/usr/lib/hadoop3)
+command :  sudo mv hadoop-3.1.1/* /usr/lib/hadoop3
+
+15)Change Directory to ubuntu root(home) directory
+   Type cd followed by enter key, it takes us to root(ubuntu home) directory.
+command : cd
+
+16)From Ubuntu Root Directory Setup Hadoop Environment Variables in the configuration file ".bashrc"
+Note : Add the following lines in ".bashrc", at end of file(after last fi keyword of .bashrc file)
+command : sudo gedit ~/.bashrc
+
+export HADOOP_PREFIX=/usr/lib/hadoop3
+
+export PATH=$PATH:$HADOOP_PREFIX/bin
+
+export PATH=$PATH:$HADOOP_PREFIX/sbin
+
+export PATH=$PATH:$JAVA_HOME/bin
+
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+
+17)Now execute bash profile
+command : exec bash
+
+18)Reload bash profile
+command : source ~/.bashrc
+
+19)Go to hadoop directory in hadoop home etc directory [usr/lib/hadoop3/etc/hadoop]
+command : cd /usr/lib/hadoop3/etc/hadoop
+
+20)Modify hadoop-env.sh in the directory "/usr/lib/hadoop3/etc/hadoop"
+command : sudo gedit hadoop-env.sh
+Note : set export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+       and remove "#" symbol in the beginning.
+
+21)Modify xml files existed in the directory "/usr/lib/hadoop3/etc/hadoop"
+Note : While copying contents in <name></name> tags and also in <value></value> tags
+       for tags each property, take care of unwanted white spaces, 
+       by chance if you copy them unxpectedly, remove those extra spaces.
+
+sudo gedit core-site.xml
+========================
+<configuration>
+   <property>
+      <name>fs.defaultFS</name>
+      <value>hdfs://localhost:9000</value>
+   </property>
+</configuration>
+
+sudo gedit hdfs-site.xml
+========================
+<configuration>
+   <property>
+      <name>dfs.replication</name>
+      <value>1</value>
+   </property>
+</configuration>
+
+sudo gedit mapred-site.xml
+==========================
+<configuration>
+  <property>
+    <name>mapreduce.framework.name</name>
+    <value>yarn</value>
+  </property>
+</configuration>
+
+sudo gedit yarn-site.xml (Take care while copying 2nd <property> <value> content, remove unwanted blank spaces)
+========================
+<configuration>
+  <property>
+    <name>yarn.nodemanager.aux-services</name>
+    <value>mapreduce_shuffle</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.env-whitelist</name>
+    <value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,CLASSPATH_PREPEND_DISTCACHE,HADOOP_YARN_HOME,HADOOP_MAPRED_HOME</value>
+  </property>
+</configuration>
+
+22)Run hadoop services from the location "/usr/lib/hadoop3/etc/hadoop"
+command : hadoop namenode -format
+
+23)Start dfs services, from sbin of Hadoop HomeDirectory ( /usr/lib/hadoop3/sbin)
+Notes: It starts NameNode, DataNode, SecondaryNameNode Services.
+command : ./start-dfs.sh
+
+23)Start Yarn Services, from sbin of Hadoop HomeDirectory (/usr/lib/hadoop3/sbin)
+Note : It starts ResourceManager and NodeManager.
+command : ./start-yarn.sh
+
+24)Instead of using step23 & 24 we can run all services in a single command.
+command : ./start-all.sh [ It is not recomended by experts ]
+
+25)To check whether all the services are up and running successfully type jps in terminal.
+command : jps
+output:
+8161 Jps
+6482 DataNode
+6754 SecondaryNameNode
+6308 NameNode
+7029 ResourceManager
+7211 NodeManager
+
+Note : If all the above six services listed in output, then you are successful in Hadoo Installation.
+       If  any name is  missed in the output, it indicates that your installation is not successfull and
+       gothrough all steps again.
+
+26)To safely stop all Hadoop Services use following command.(/usr/lib/hadoop3/sbin)
+command : ./stop-all.sh
